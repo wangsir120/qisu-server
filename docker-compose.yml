@@ -1,0 +1,83 @@
+version: '3.8'
+
+services:
+  # ==================== 数据库服务 ====================
+  database:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: qisu-database
+    restart: unless-stopped
+    environment:
+      - ACCEPT_EULA=Y
+      - MSSQL_SA_PASSWORD=${DB_PASSWORD:-Qisu@123456}
+      - MSSQL_PID=Express
+    ports:
+      - "1433:1433"
+    volumes:
+      - sqlserver_data:/var/opt/mssql/data
+      - sqlserver_log:/var/opt/mssql/log
+    healthcheck:
+      test: /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P "$$MSSQL_SA_PASSWORD" -Q "SELECT 1" || exit 1
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    networks:
+      - qisu-network
+
+  # ==================== API 服务 ====================
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: qisu-api
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    environment:
+      # 数据库连接
+      - ConnectionStrings__DefaultConnection=Server=database;Database=QisuDB;User Id=sa;Password=${DB_PASSWORD:-Qisu@123456};TrustServerCertificate=True;
+      # JWT 配置
+      - JwtSettings__SecretKey=${JWT_SECRET:-qisu-travel-secret-key-for-jwt-token-generation-2026}
+      - JwtSettings__Issuer=qisu-server
+      - JwtSettings__Audience=qisu-client
+      - JwtSettings__ExpirationMinutes=1440
+      # 阿里云配置
+      - Aliyun__AccessKeyId=${ALIYUN_ACCESS_KEY_ID}
+      - Aliyun__AccessKeySecret=${ALIYUN_ACCESS_KEY_SECRET}
+      - Aliyun__Sms__SignName=${ALIYUN_SMS_SIGN_NAME}
+      - Aliyun__Sms__TemplateCode=${ALIYUN_SMS_TEMPLATE_CODE}
+      # 支付宝配置
+      - Alipay__AppId=${ALIPAY_APP_ID}
+      - Alipay__PrivateKey=${ALIPAY_PRIVATE_KEY}
+      - Alipay__AlipayPublicKey=${ALIPAY_PUBLIC_KEY}
+      - Alipay__GatewayUrl=https://openapi.alipay.com/gateway.do
+      - Alipay__NotifyUrl=${ALIPAY_NOTIFY_URL}
+      - Alipay__ReturnUrl=${ALIPAY_RETURN_URL}
+      # 高德地图
+      - Amap__WebApiKey=${AMAP_API_KEY}
+      # 聚合数据
+      - Juhe__IdCardKey=${JUHE_API_KEY}
+      # ASP.NET Core
+      - ASPNETCORE_URLS=http://+:5000
+      - ASPNETCORE_ENVIRONMENT=Production
+    volumes:
+      - ./uploads:/app/uploads
+    depends_on:
+      database:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/api/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    networks:
+      - qisu-network
+
+volumes:
+  sqlserver_data:
+  sqlserver_log:
+
+networks:
+  qisu-network:
+    driver: bridge

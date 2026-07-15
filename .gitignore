@@ -38,3 +38,8 @@ uploads/
 ## 数据库文件
 *.sql
 database/
+
+## 环境变量文件
+.env
+.env.local
+.env.production
