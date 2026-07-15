@@ -1,0 +1,40 @@
+## .NET 编译输出
+bin/
+obj/
+publish/
+*.tar.gz
+
+## Visual Studio 配置
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+## 用户特定配置
+appsettings.Development.json
+appsettings.Production.json
+*.Development.json
+*.Production.json
+
+## 临时文件
+*.tmp
+*.temp
+*.log
+*.swp
+*~
+
+## NuGet 包还原
+project.lock.json
+artifacts/
+
+## IDE 配置
+.idea/
+*.iml
+
+## 上传文件（运行时生成）
+uploads/
+
+## 数据库文件
+*.sql
+database/

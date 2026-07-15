@@ -1,0 +1,14 @@
+bin/
+obj/
+.vs/
+.vscode/
+*.user
+*.suo
+*.cache
+*.log
+publish/runtimes/win/
+publish/runtimes/win-arm/
+publish/runtimes/win-arm64/
+publish/runtimes/win-x64/
+publish/runtimes/win-x86/
+uploads/
